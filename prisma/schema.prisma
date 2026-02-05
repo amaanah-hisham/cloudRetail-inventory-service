@@ -1,0 +1,44 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Inventory {
+  id            String   @id @default(uuid())
+  productId     String   @unique @map("product_id")
+  productSku    String   @unique @map("product_sku")
+  quantity      Int      @default(0)
+  reservedQty   Int      @default(0) @map("reserved_qty") // For pending orders
+  availableQty  Int      @default(0) @map("available_qty") // quantity - reservedQty
+  reorderLevel  Int      @default(10) @map("reorder_level")
+  reorderQty    Int      @default(50) @map("reorder_qty")
+  lastRestocked DateTime? @map("last_restocked")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@index([productId])
+  @@index([productSku])
+  @@map("inventory")
+}
+
+model InventoryLog {
+  id          String   @id @default(uuid())
+  productId   String   @map("product_id")
+  productSku  String   @map("product_sku")
+  changeType  String   @map("change_type") // RESTOCK, SALE, RESERVE, RELEASE, ADJUST
+  quantity    Int
+  previousQty Int      @map("previous_qty")
+  newQty      Int      @map("new_qty")
+  orderId     String?  @map("order_id")
+  reason      String?
+  createdBy   String?  @map("created_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([productId])
+  @@index([orderId])
+  @@map("inventory_logs")
+}
